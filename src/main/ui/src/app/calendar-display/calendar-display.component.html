@@ -1,0 +1,22 @@
+<table class="calendar-display">
+  <thead>
+    <td>Date</td>
+    <td>Début</td>
+    <td>Fin</td>
+    <td>Lieu</td>
+    <td class="service">Nature du service</td>
+  </thead>
+  <tbody *ngFor="let day of days">
+    <tr *ngIf="day.events.length == 0">
+      <td class="date">{{day.date | amParse:'YYYY-MM-DD' | amLocale: 'fr' | amDateFormat: 'dddd D' | titlecase}}</td>
+      <td colspan="4" class="empty-day"></td>
+    </tr>
+    <tr *ngFor="let event of day.events; let isFirstRow=first">
+      <td *ngIf="isFirstRow" [attr.rowspan]="day.events.length" class="date">{{day.date | amParse:'YYYY-MM-DD' | amLocale: 'fr' | amDateFormat: 'dddd D' | titlecase}}</td>
+      <td>{{event.start | amParse: 'HH:mm:ss.SSS' | amLocale: 'fr' | amDateFormat: 'HH:mm'}}</td>
+      <td>{{event.end | amParse: 'HH:mm:ss.SSS' | amLocale: 'fr' | amDateFormat: 'HH:mm'}}</td>
+      <td>{{event.location}}</td>
+      <td>{{event.title}}</td>
+    </tr>
+  </tbody>
+</table>

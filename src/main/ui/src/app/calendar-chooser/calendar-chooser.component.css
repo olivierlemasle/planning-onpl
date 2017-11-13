@@ -1,0 +1,17 @@
+.calendars-radio-group {
+  display: flex;
+  flex-direction: column;
+  padding: 2px;
+}
+.calendars-radio-button {
+  margin: 5px;
+}
+.radio-inner {
+  display: flex;
+}
+.square {
+  border: solid 1px;
+  height: 11px;
+  width: 11px;
+  margin-right: 5px;
+}

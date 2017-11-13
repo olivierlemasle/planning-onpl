@@ -1,0 +1,11 @@
+<p>Sélectionner un calendrier Google Calendar :</p>
+<mat-radio-group class="calendars-radio-group" [(ngModel)]="selectedCalendar">
+  <mat-radio-button class="calendars-radio-button" *ngFor="let calendar of calendars" [value]="calendar">
+    <div class="radio-inner">
+      <div class="square"
+        [style.background]="calendar.backgroundColor"
+        [style.borderColor]="calendar.backgroundColor"></div>
+      <div class="calendarName">{{calendar.summary}}</div>
+    </div>
+  </mat-radio-button>
+</mat-radio-group>

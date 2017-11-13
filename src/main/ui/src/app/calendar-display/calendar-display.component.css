@@ -1,0 +1,22 @@
+table.calendar-display {
+  border-collapse: collapse;
+  border: solid 2px;
+  width: 100%;
+}
+.calendar-display thead {
+  font-weight: bold;
+  border-bottom: solid 2px;
+}
+.calendar-display td {
+  border: solid 1px;
+  padding: 2px;
+}
+.empty-day {
+  background-color: #999999;
+}
+.date {
+  text-align: right;
+}
+.service {
+  width: 60%;
+}

@@ -1,0 +1,29 @@
+.content {
+  margin: 8px
+}
+.stepper {
+  max-width: 1000px;
+}
+.icon {
+  vertical-align: middle;
+}
+.fill-remaining-space {
+  flex: 1 1 auto;
+}
+.month {
+  text-align: center;
+}
+.next {
+  margin-top: 1em;
+  float: right;
+}
+.previous {
+  margin-top: 1em;
+  float: left;
+}
+.fileInputSection {
+  display: flex;
+}
+.fileInputSection .mat-progress-spinner {
+  margin-left: 1em;
+}

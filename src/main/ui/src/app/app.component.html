@@ -1,0 +1,61 @@
+<mat-toolbar color="primary" class="mat-elevation-z4" class="header">
+  <h1>Planning de l'ONPL</h1>
+  <span class="fill-remaining-space"></span>
+  <div *ngIf="userInfo.userId; else login">
+    <span>{{userInfo.nickName}}</span>
+    <a mat-button [href]="userInfo.logoutUrl">
+      <mat-icon class="icon" matTooltip="Déconnexion">exit_to_app</mat-icon>
+    </a>
+  </div>
+  <ng-template #login>
+    <a mat-button [href]="userInfo.loginUrl">Connexion</a>
+  </ng-template>
+</mat-toolbar>
+
+<section class="content mat-typography">
+  <h3>Cet outil permet d'importer un planning mensuel de l'ONPL, de le visualiser,
+    et de l'exporter dans Google Calendar.
+  </h3>
+
+  <mat-horizontal-stepper linear class="stepper" #stepper>
+    <mat-step label="Importer" [stepControl]="importFormGroup">
+      <form [formGroup]="importFormGroup">
+        <div class="fileInputSection">
+          <mat-form-field>
+            <app-file-input placeholder="Fichier PDF" required formControlName="pdfFile" #fileInput (change)="upload(fileInput.value)"></app-file-input>
+            <mat-error *ngIf="importFormGroup.get('pdfFile').hasError('required')">
+              Merci de sélectionner un fichier
+            </mat-error>
+            <mat-icon matSuffix>file_upload</mat-icon>
+          </mat-form-field>
+          <mat-progress-spinner *ngIf="isBusy" [diameter]="40" [value]="progress"></mat-progress-spinner>
+        </div>
+        <div>
+          <button mat-button matStepperNext class="next">Suivant</button>
+        </div>
+      </form>
+    </mat-step>
+
+    <mat-step label="Visualiser">
+      <h3 class="month">Mois de {{calendarMonth.month | amParse:'YYYY-MM-DD' | amLocale: 'fr' | amDateFormat: 'MMMM YYYY' }}</h3>
+      <app-calendar-display [days]="calendarMonth.days"></app-calendar-display>
+      <div>
+        <button mat-button matStepperPrevious class="previous">Précédent</button>
+        <button mat-button matStepperNext class="next">Suivant</button>
+      </div>
+    </mat-step>
+
+    <mat-step label="Exporter" selected>
+      <div *ngIf="userInfo.userId; else noUser">
+        <app-google-calendar [calendarMonth]="calendarMonth"></app-google-calendar>
+      </div>
+      <ng-template #noUser>
+        <p>Vous n'êtes pas connecté. Se connecter permet d'exporter l'agenda dans Google Calendar.</p>
+        <a mat-raised-button color="primary" [href]="userInfo.loginUrl">Se connecter</a>
+      </ng-template>
+      <div>
+        <button mat-button matStepperPrevious class="previous">Précédent</button>
+      </div>
+    </mat-step>
+  </mat-horizontal-stepper>
+</section>
