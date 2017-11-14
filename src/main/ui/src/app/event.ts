@@ -3,4 +3,5 @@ export class Event {
   public end: string;
   public location: string;
   public title: string;
+  public group: string;
 }

@@ -12,13 +12,10 @@ import spark.kotlin.Http
 import spark.kotlin.halt
 import spark.kotlin.ignite
 import spark.servlet.SparkApplication
-import java.time.LocalDate
 import java.time.LocalTime
 import java.time.ZoneId
 import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
-import java.time.temporal.ChronoField.DAY_OF_MONTH
-import java.util.*
 
 class MainApp : SparkApplication {
 
@@ -26,21 +23,6 @@ class MainApp : SparkApplication {
         // If this property is not found, PDFBox will try to write font cache in '/base/data/home/.pdfbox.cache'
         // (in the 'home' directory), which is read-only on Google AppEngine.
         System.setProperty("pdfbox.fontcache", "/tmp")
-    }
-
-    private val random = Random()
-    fun ClosedRange<Int>.random() = random.nextInt(endInclusive + 1 - start) + start
-
-    private fun randomEvents(): List<Event> {
-        val n = (0..2).random()
-        val res = arrayListOf<Event>()
-        for (i in 1..n) {
-            val start = LocalTime.of((9..20).random(), 0)
-            val end = start.plusHours(2)
-            val location = if (random.nextBoolean()) "Angers" else "Nantes"
-            res.add(Event(start = start, end = end, title = "Service ${(0..100).random()}", location = location))
-        }
-        return res
     }
 
     override fun init() {
@@ -52,11 +34,8 @@ class MainApp : SparkApplication {
                 response.status(400)
                 return@post "Empty document"
             }
-            val lines = Parser.getLines(bytesArray)
-            val month = Parser.extractMonth(lines)
-                    ?: return@post "No month"
-
-            val calendarMonth = Parser.extractEvents(lines, month)
+            val parser = Parser(bytesArray)
+            val calendarMonth = parser.extractEvents()
 
             response.type("application/json")
             gson.toJson(calendarMonth)
@@ -173,7 +152,7 @@ class MainApp : SparkApplication {
                         val end = ZonedDateTime.of(day.date, it.end, zone).format(DateTimeFormatter.ISO_OFFSET_DATE_TIME)
 
                         com.google.api.services.calendar.model.Event()
-                                .setSummary(it.title)
+                                .setSummary("${it.title} - ${it.group}")
                                 .setLocation(it.location)
                                 .setStart(EventDateTime().setDateTime(DateTime(start)).setTimeZone("Europe/Paris"))
                                 .setEnd(EventDateTime().setDateTime(DateTime(end)).setTimeZone("Europe/Paris"))

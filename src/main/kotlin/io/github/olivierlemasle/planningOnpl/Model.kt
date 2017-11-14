@@ -3,7 +3,7 @@ package io.github.olivierlemasle.planningOnpl
 import java.time.LocalDate
 import java.time.LocalTime
 
-data class Event(val start: LocalTime, val end: LocalTime, val title: String, val location: String)
+data class Event(val start: LocalTime, val end: LocalTime, val title: String, val location: String, val group: String)
 
 data class CalendarDay(val date: LocalDate, val events: List<Event>)
 
