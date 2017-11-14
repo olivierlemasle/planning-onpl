@@ -33,7 +33,7 @@ class AuthorizationServlet : AbstractAppEngineAuthorizationCodeServlet() {
 class OAuth2Callback : AbstractAppEngineAuthorizationCodeCallbackServlet() {
 
     override fun onSuccess(req: HttpServletRequest, resp: HttpServletResponse, credential: Credential) {
-        resp.sendRedirect("/")
+        resp.sendRedirect("/last")
     }
 
     override fun onError(req: HttpServletRequest, resp: HttpServletResponse, errorResponse: AuthorizationCodeResponseUrl) {

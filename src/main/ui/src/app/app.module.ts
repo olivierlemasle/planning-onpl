@@ -2,6 +2,7 @@ import { BrowserModule } from '@angular/platform-browser';
 import { NgModule } from '@angular/core';
 import { HttpClientModule } from '@angular/common/http';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { RouterModule, Routes } from '@angular/router';
 import { MatButtonModule, MatRadioModule, MatSlideToggleModule, MatMenuModule,
   MatProgressSpinnerModule, MatToolbarModule, MatStepperModule, MatIconModule,
   MatFormFieldModule, MatInputModule, MatTooltipModule } from '@angular/material';
@@ -28,6 +29,9 @@ import { FileInputComponent } from './file-input/file-input.component';
     BrowserModule,
     HttpClientModule,
     FormsModule, ReactiveFormsModule,
+    RouterModule.forRoot([
+      { path: 'last', component: AppComponent}
+    ]),
     MatButtonModule, MatRadioModule, MatSlideToggleModule, MatMenuModule,
     MatProgressSpinnerModule, MatToolbarModule, MatStepperModule, MatIconModule,
     MatFormFieldModule, MatInputModule, MatTooltipModule,

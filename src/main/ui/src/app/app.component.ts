@@ -1,11 +1,13 @@
 import { Component, OnInit, ViewChild } from '@angular/core';
 import { HttpClient, HttpRequest, HttpResponse, HttpEventType } from '@angular/common/http';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
-
+import { Router } from '@angular/router';
+import { MatStepper } from '@angular/material';
 
 import { CalendarMonth } from './calendar-month';
 import { UserInfo } from './user-info';
 import { FileInput } from './file-input/file-input';
+import { BooleanResult } from './boolean-result';
 
 @Component({
   selector: 'app-root',
@@ -13,20 +15,31 @@ import { FileInput } from './file-input/file-input';
   styleUrls: ['./app.component.css']
 })
 export class AppComponent implements OnInit {
-  constructor(private http: HttpClient, private formBuilder: FormBuilder) {}
+  constructor(private http: HttpClient, private formBuilder: FormBuilder, private router: Router) {}
 
   calendarMonth: CalendarMonth = new CalendarMonth();
   userInfo: UserInfo = new UserInfo();
   isBusy = false;
   progress = 0;
   importFormGroup: FormGroup;
-  @ViewChild('stepper') stepper;
+  @ViewChild(MatStepper) stepper: MatStepper;
 
   ngOnInit() {
     this.importFormGroup = this.formBuilder.group({
       pdfFile: ['', [Validators.required]]
     });
-    // this.stepper.selectedIndex = 2;
+    this.http.get('/api/session').subscribe((data: CalendarMonth) => {
+      if (data.month) {
+        this.calendarMonth = data;
+        this.importFormGroup.controls['pdfFile'].disable();
+        this.stepper.selected.completed = true;
+        this.stepper.selectedIndex = 1;
+        if (this.router.url === '/last') {
+          this.stepper.selected.completed = true;
+          this.stepper.selectedIndex = 2;
+        }
+      }
+    });
     this.http.get('/api/user').subscribe((data: UserInfo) => {
       this.userInfo = data;
     });

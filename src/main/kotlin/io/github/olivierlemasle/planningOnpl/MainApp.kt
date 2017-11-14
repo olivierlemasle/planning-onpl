@@ -7,7 +7,9 @@ import com.google.api.client.http.HttpHeaders
 import com.google.api.client.util.DateTime
 import com.google.api.services.calendar.model.Event.ExtendedProperties
 import com.google.api.services.calendar.model.EventDateTime
+import com.google.appengine.api.memcache.MemcacheServiceFactory
 import com.google.appengine.api.users.UserServiceFactory
+import com.google.common.hash.Hashing
 import spark.kotlin.Http
 import spark.kotlin.halt
 import spark.kotlin.ignite
@@ -16,29 +18,51 @@ import java.time.LocalTime
 import java.time.ZoneId
 import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
+import java.util.logging.Logger
 
 class MainApp : SparkApplication {
-
-    init {
-        // If this property is not found, PDFBox will try to write font cache in '/base/data/home/.pdfbox.cache'
-        // (in the 'home' directory), which is read-only on Google AppEngine.
-        System.setProperty("pdfbox.fontcache", "/tmp")
-    }
+    private val hashFunction = Hashing.murmur3_128()
+    private val logger = Logger.getLogger(MainApp::class.java.name)
 
     override fun init() {
         val http: Http = ignite()
 
         http.post("/api/upload") {
-            val bytesArray = request.bodyAsBytes()
-            if (bytesArray.isEmpty()) {
+            val bytes = request.bodyAsBytes()
+            if (bytes.isEmpty()) {
                 response.status(400)
                 return@post "Empty document"
             }
-            val parser = Parser(bytesArray)
-            val calendarMonth = parser.extractEvents()
+
+            val hash = hashFunction.hashBytes(bytes)
+            val cache = MemcacheServiceFactory.getMemcacheService()
+            val cachedData = cache.get(hash) as? CalendarMonth?
+            val calendarMonth = if (cachedData == null) {
+                logger.info("Parsing document")
+                val parser = Parser(bytes)
+                val calendarMonth = parser.extractEvents()
+                cache.put(hash, calendarMonth)
+                calendarMonth
+            } else {
+                logger.info("Using cached value")
+                cachedData
+            }
+
+            request.session().attribute("month", calendarMonth)
 
             response.type("application/json")
             gson.toJson(calendarMonth)
+        }
+
+        http.get("/api/session") {
+            val calendarMonth: CalendarMonth? = request.session().attribute<CalendarMonth>("month")
+            if (calendarMonth == null) {
+                response.type("application/json")
+                false.toWrappedJson()
+            } else {
+                response.type("application/json")
+                gson.toJson(calendarMonth)
+            }
         }
 
         http.before("/api/protected/*") {

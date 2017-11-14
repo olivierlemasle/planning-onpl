@@ -3,7 +3,17 @@
     <threadsafe>true</threadsafe>
     <runtime>java8</runtime>
     <public-root>ui/dist</public-root>
+
     <system-properties>
+        <!-- Configure logging -->
         <property name="java.util.logging.config.file" value="WEB-INF/logging.properties"/>
+
+        <!--If this property is not found, PDFBox will try to write font cache in '/base/data/home/.pdfbox.cache'-->
+        <!--(in the 'home' directory), which is read-only on Google AppEngine.-->
+        <property name="pdfbox.fontcache" value="/tmp"/>
     </system-properties>
+
+    <!-- Sessions -->
+    <sessions-enabled>true</sessions-enabled>
+    <async-session-persistence enabled="true"/>
 </appengine-web-app>
