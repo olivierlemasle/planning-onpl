@@ -5,5 +5,5 @@
     Synchroniser l'agenda de {{calendarMonth.month | amParse:'YYYY-MM-DD' | amLocale: 'fr' | amDateFormat: 'MMMM YYYY' }}
     vers le calendrier "{{chooser.selectedCalendar.summary}}"
   </button>
-  <mat-progress-bar *ngIf="isSynching" color="primary" mode="undeterminate"></mat-progress-bar>
+  <mat-progress-bar *ngIf="isSynching" color="primary" mode="indeterminate"></mat-progress-bar>
 </div>
