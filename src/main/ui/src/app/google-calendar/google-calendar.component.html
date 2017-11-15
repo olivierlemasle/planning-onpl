@@ -1,11 +1,9 @@
 <mat-slide-toggle #slider (change)="change()" [(ngModel)]="isLinkedToGCalendar" >Lié à Coogle Calendar</mat-slide-toggle>
 <div *ngIf="isLinkedToGCalendar">
   <app-calendar-chooser #chooser></app-calendar-chooser>
-  <div class="synch">
-    <button mat-raised-button color="primary" *ngIf="chooser.selectedCalendar" (click)="push(chooser.selectedCalendar)">
-      Synchroniser l'agenda de {{calendarMonth.month | amParse:'YYYY-MM-DD' | amLocale: 'fr' | amDateFormat: 'MMMM YYYY' }}
-      vers le calendrier "{{chooser.selectedCalendar.summary}}"
-    </button>
-    <mat-spinner *ngIf="isSynching" color="primary" [diameter]="40" ></mat-spinner>
-  </div>
+  <button mat-raised-button color="primary" *ngIf="chooser.selectedCalendar" (click)="push(chooser.selectedCalendar)">
+    Synchroniser l'agenda de {{calendarMonth.month | amParse:'YYYY-MM-DD' | amLocale: 'fr' | amDateFormat: 'MMMM YYYY' }}
+    vers le calendrier "{{chooser.selectedCalendar.summary}}"
+  </button>
+  <mat-progress-bar *ngIf="isSynching" color="primary" mode="undeterminate"></mat-progress-bar>
 </div>

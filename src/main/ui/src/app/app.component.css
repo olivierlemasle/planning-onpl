@@ -21,9 +21,3 @@
   margin-top: 1em;
   float: left;
 }
-.fileInputSection {
-  display: flex;
-}
-.fileInputSection .mat-progress-spinner {
-  margin-left: 1em;
-}

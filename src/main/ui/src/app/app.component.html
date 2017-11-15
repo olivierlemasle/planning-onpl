@@ -17,19 +17,18 @@
     et de l'exporter dans Google Calendar.
   </h3>
 
-  <mat-horizontal-stepper linear class="stepper" #stepper>
+  <mat-horizontal-stepper linear class="stepper" (selectionChange)="stepChanged($event)">
+
     <mat-step label="Importer" [stepControl]="importFormGroup">
       <form [formGroup]="importFormGroup">
-        <div class="fileInputSection">
-          <mat-form-field>
-            <app-file-input placeholder="Fichier PDF" required formControlName="pdfFile" #fileInput (change)="upload(fileInput.value)"></app-file-input>
-            <mat-error *ngIf="importFormGroup.get('pdfFile').hasError('required')">
-              Merci de sélectionner un fichier
-            </mat-error>
-            <mat-icon matSuffix>file_upload</mat-icon>
-          </mat-form-field>
-          <mat-progress-spinner *ngIf="isBusy" [diameter]="40" [value]="progress"></mat-progress-spinner>
-        </div>
+        <mat-form-field>
+          <app-file-input placeholder="Planning mensuel" required formControlName="pdfFile" #fileInput (change)="upload(fileInput.value)"></app-file-input>
+          <mat-error *ngIf="importFormGroup.get('pdfFile').hasError('required')">
+            Merci de sélectionner un fichier PDF
+          </mat-error>
+          <mat-icon matSuffix>file_upload</mat-icon>
+        </mat-form-field>
+        <mat-progress-bar *ngIf="isBusy" [mode]="mode" [value]="progress"></mat-progress-bar>
         <div>
           <button mat-button matStepperNext class="next">Suivant</button>
         </div>
@@ -45,7 +44,7 @@
       </div>
     </mat-step>
 
-    <mat-step label="Exporter" selected>
+    <mat-step label="Exporter">
       <div *ngIf="userInfo.userId; else noUser">
         <app-google-calendar [calendarMonth]="calendarMonth"></app-google-calendar>
       </div>

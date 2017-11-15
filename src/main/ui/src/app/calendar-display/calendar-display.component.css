@@ -9,11 +9,14 @@ table.calendar-display {
 }
 .calendar-display td {
   border: solid 1px;
-  padding: 2px;
+  padding: 2px 5px;
 }
 .empty-day {
   background-color: #999999;
 }
 .date {
   text-align: right;
+}
+.time {
+  text-align: center;
 }

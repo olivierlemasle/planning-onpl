@@ -4,7 +4,7 @@ import { HttpClientModule } from '@angular/common/http';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { RouterModule, Routes } from '@angular/router';
 import { MatButtonModule, MatRadioModule, MatSlideToggleModule, MatMenuModule,
-  MatProgressSpinnerModule, MatToolbarModule, MatStepperModule, MatIconModule,
+  MatProgressBarModule, MatToolbarModule, MatStepperModule, MatIconModule,
   MatFormFieldModule, MatInputModule, MatTooltipModule } from '@angular/material';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { MomentModule } from 'angular2-moment';
@@ -33,7 +33,7 @@ import { FileInputComponent } from './file-input/file-input.component';
       { path: 'last', component: AppComponent}
     ]),
     MatButtonModule, MatRadioModule, MatSlideToggleModule, MatMenuModule,
-    MatProgressSpinnerModule, MatToolbarModule, MatStepperModule, MatIconModule,
+    MatProgressBarModule, MatToolbarModule, MatStepperModule, MatIconModule,
     MatFormFieldModule, MatInputModule, MatTooltipModule,
     BrowserAnimationsModule,
     MomentModule

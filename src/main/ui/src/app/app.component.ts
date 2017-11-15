@@ -1,8 +1,9 @@
 import { Component, OnInit, ViewChild } from '@angular/core';
 import { HttpClient, HttpRequest, HttpResponse, HttpEventType } from '@angular/common/http';
-import { FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { FormBuilder, FormGroup, Validators, FormControl} from '@angular/forms';
 import { Router } from '@angular/router';
-import { MatStepper } from '@angular/material';
+import { MatStepper, ErrorStateMatcher } from '@angular/material';
+import { StepperSelectionEvent } from '@angular/cdk/stepper';
 
 import { CalendarMonth } from './calendar-month';
 import { UserInfo } from './user-info';
@@ -20,6 +21,7 @@ export class AppComponent implements OnInit {
   calendarMonth: CalendarMonth = new CalendarMonth();
   userInfo: UserInfo = new UserInfo();
   isBusy = false;
+  mode = 'determinate';
   progress = 0;
   importFormGroup: FormGroup;
   @ViewChild(MatStepper) stepper: MatStepper;
@@ -45,6 +47,10 @@ export class AppComponent implements OnInit {
     });
   }
 
+  stepChanged(evt: StepperSelectionEvent) {
+    console.log(evt);
+  }
+
   upload(input: FileInput) {
     if (!input) {
       return;
@@ -53,6 +59,7 @@ export class AppComponent implements OnInit {
     const pdfFile: File = input.file;
     this.isBusy = true;
     this.progress = 0;
+    this.mode = 'determinate';
 
     const req = new HttpRequest('POST', '/api/upload', pdfFile, {
       reportProgress: true
@@ -62,10 +69,16 @@ export class AppComponent implements OnInit {
         const percentDone = Math.round(100 * event.loaded / event.total);
         this.progress = percentDone;
         console.log(`Le fichier est téléchargé à ${percentDone}%.`);
+        if (event.loaded === event.total) {
+          this.mode = 'query';
+        }
       } else if (event instanceof HttpResponse) {
         this.isBusy = false;
         if (event.status === 200) {
-          this.calendarMonth = event.body as CalendarMonth;
+          const resp = event.body as CalendarMonth;
+          if (resp && resp.month) {
+            this.calendarMonth = resp;
+          }
         }
       }
     });
