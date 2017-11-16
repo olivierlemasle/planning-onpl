@@ -37,7 +37,7 @@
 
     <mat-step label="Visualiser">
       <h3 class="month">Mois de {{calendarMonth.month | amParse:'YYYY-MM-DD' | amLocale: 'fr' | amDateFormat: 'MMMM YYYY' }}</h3>
-      <app-calendar-display [days]="calendarMonth.days"></app-calendar-display>
+      <app-calendar-display [calendarMonth]="calendarMonth"></app-calendar-display>
       <div>
         <button mat-button matStepperPrevious class="previous">Précédent</button>
         <button mat-button matStepperNext class="next">Suivant</button>

@@ -2,10 +2,9 @@ import { BrowserModule } from '@angular/platform-browser';
 import { NgModule } from '@angular/core';
 import { HttpClientModule } from '@angular/common/http';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { RouterModule, Routes } from '@angular/router';
 import { MatButtonModule, MatRadioModule, MatSlideToggleModule, MatMenuModule,
   MatProgressBarModule, MatToolbarModule, MatStepperModule, MatIconModule,
-  MatFormFieldModule, MatInputModule, MatTooltipModule } from '@angular/material';
+  MatFormFieldModule, MatInputModule, MatTooltipModule, MatCheckboxModule, MatSnackBarModule } from '@angular/material';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { MomentModule } from 'angular2-moment';
 
@@ -29,12 +28,9 @@ import { FileInputComponent } from './file-input/file-input.component';
     BrowserModule,
     HttpClientModule,
     FormsModule, ReactiveFormsModule,
-    RouterModule.forRoot([
-      { path: 'last', component: AppComponent}
-    ]),
     MatButtonModule, MatRadioModule, MatSlideToggleModule, MatMenuModule,
     MatProgressBarModule, MatToolbarModule, MatStepperModule, MatIconModule,
-    MatFormFieldModule, MatInputModule, MatTooltipModule,
+    MatFormFieldModule, MatInputModule, MatTooltipModule, MatCheckboxModule, MatSnackBarModule,
     BrowserAnimationsModule,
     MomentModule
   ],

@@ -1,22 +1,23 @@
-import { Component, OnInit, ViewChild } from '@angular/core';
-import { HttpClient, HttpRequest, HttpResponse, HttpEventType } from '@angular/common/http';
+import { Component, OnInit, AfterViewInit, ViewChild, ChangeDetectorRef} from '@angular/core';
+import { HttpClient, HttpRequest, HttpResponse, HttpEventType, HttpErrorResponse } from '@angular/common/http';
 import { FormBuilder, FormGroup, Validators, FormControl} from '@angular/forms';
-import { Router } from '@angular/router';
-import { MatStepper, ErrorStateMatcher } from '@angular/material';
+import { MatStepper, ErrorStateMatcher, MatSnackBar } from '@angular/material';
 import { StepperSelectionEvent } from '@angular/cdk/stepper';
 
 import { CalendarMonth } from './calendar-month';
 import { UserInfo } from './user-info';
 import { FileInput } from './file-input/file-input';
 import { BooleanResult } from './boolean-result';
+import { CalendarDay } from './calendar-day';
+import { Event } from './event';
 
 @Component({
   selector: 'app-root',
   templateUrl: './app.component.html',
   styleUrls: ['./app.component.css']
 })
-export class AppComponent implements OnInit {
-  constructor(private http: HttpClient, private formBuilder: FormBuilder, private router: Router) {}
+export class AppComponent implements OnInit, AfterViewInit {
+  constructor(private http: HttpClient, private formBuilder: FormBuilder, private cd: ChangeDetectorRef, public snackBar: MatSnackBar) {}
 
   calendarMonth: CalendarMonth = new CalendarMonth();
   userInfo: UserInfo = new UserInfo();
@@ -30,25 +31,36 @@ export class AppComponent implements OnInit {
     this.importFormGroup = this.formBuilder.group({
       pdfFile: ['', [Validators.required]]
     });
-    this.http.get('/api/session').subscribe((data: CalendarMonth) => {
-      if (data.month) {
-        this.calendarMonth = data;
-        this.importFormGroup.controls['pdfFile'].disable();
-        this.stepper.selected.completed = true;
-        this.stepper.selectedIndex = 1;
-        if (this.router.url === '/last') {
-          this.stepper.selected.completed = true;
-          this.stepper.selectedIndex = 2;
-        }
-      }
-    });
     this.http.get('/api/user').subscribe((data: UserInfo) => {
       this.userInfo = data;
     });
+
+    const sessionCalendarMonth = sessionStorage.getItem('calendarMonth');
+    if (sessionCalendarMonth) {
+      const obj = JSON.parse(sessionCalendarMonth) as CalendarMonth;
+      if (obj) {
+        this.calendarMonth = obj;
+      }
+    }
+  }
+
+  ngAfterViewInit() {
+    const sessionStep = sessionStorage.getItem('step');
+    if (sessionStep === '1' || sessionStep === '2') {
+      this.importFormGroup.controls['pdfFile'].disable();
+      this.stepper.selected.completed = true;
+      this.stepper.selectedIndex = 1;
+      this.cd.detectChanges();
+    }
+    if (sessionStep === '2') {
+      this.stepper.selected.completed = true;
+      this.stepper.selectedIndex = 2;
+      this.cd.detectChanges();
+    }
   }
 
   stepChanged(evt: StepperSelectionEvent) {
-    console.log(evt);
+    sessionStorage.setItem('step', evt.selectedIndex.toString());
   }
 
   upload(input: FileInput) {
@@ -64,23 +76,42 @@ export class AppComponent implements OnInit {
     const req = new HttpRequest('POST', '/api/upload', pdfFile, {
       reportProgress: true
     });
-    this.http.request(req).subscribe(event => {
-      if (event.type === HttpEventType.UploadProgress && event.total) {
-        const percentDone = Math.round(100 * event.loaded / event.total);
-        this.progress = percentDone;
-        console.log(`Le fichier est téléchargé à ${percentDone}%.`);
-        if (event.loaded === event.total) {
-          this.mode = 'query';
-        }
-      } else if (event instanceof HttpResponse) {
-        this.isBusy = false;
-        if (event.status === 200) {
-          const resp = event.body as CalendarMonth;
-          if (resp && resp.month) {
-            this.calendarMonth = resp;
+    this.http.request(req).subscribe(
+      event => {
+        if (event.type === HttpEventType.UploadProgress && event.total) {
+          const percentDone = Math.round(100 * event.loaded / event.total);
+          this.progress = percentDone;
+          if (event.loaded === event.total) {
+            this.mode = 'query';
+          }
+        } else if (event instanceof HttpResponse) {
+          this.isBusy = false;
+          if (event.status === 200) {
+            const resp = event.body as CalendarMonth;
+            if (resp && resp.month) {
+              this.calendarMonth = resp;
+              this.calendarMonth.days.forEach((day: CalendarDay) => {
+                day.events.forEach((e: Event) => {
+                  e.enabled = true;
+                });
+              });
+            }
           }
         }
+      },
+      (error: HttpErrorResponse) => {
+        this.isBusy = false;
+        let message: string;
+        if (error.status === 400) {
+          message = 'Le fichier importé n\' semble ne pas être un planning valide.';
+        } else {
+          message = 'Une erreur est survenue.';
+        }
+        this.snackBar.open(message, null, {
+          duration: 3000,
+        });
+        this.importFormGroup.controls['pdfFile'].setValue(null);
       }
-    });
+    );
   }
 }

@@ -12,8 +12,4 @@
         <!--(in the 'home' directory), which is read-only on Google AppEngine.-->
         <property name="pdfbox.fontcache" value="/tmp"/>
     </system-properties>
-
-    <!-- Sessions -->
-    <sessions-enabled>true</sessions-enabled>
-    <async-session-persistence enabled="true"/>
 </appengine-web-app>

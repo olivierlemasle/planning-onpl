@@ -48,21 +48,13 @@ class MainApp : SparkApplication {
                 cachedData
             }
 
-            request.session().attribute("month", calendarMonth)
+            if (calendarMonth == null) {
+                response.status(400)
+                return@post "Invalid document"
+            }
 
             response.type("application/json")
             gson.toJson(calendarMonth)
-        }
-
-        http.get("/api/session") {
-            val calendarMonth: CalendarMonth? = request.session().attribute<CalendarMonth>("month")
-            if (calendarMonth == null) {
-                response.type("application/json")
-                false.toWrappedJson()
-            } else {
-                response.type("application/json")
-                gson.toJson(calendarMonth)
-            }
         }
 
         http.before("/api/protected/*") {

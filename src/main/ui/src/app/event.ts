@@ -4,4 +4,5 @@ export class Event {
   public location: string;
   public title: string;
   public group: string;
+  public enabled: boolean;
 }

@@ -6,11 +6,12 @@
     <td>Lieu</td>
     <td>Nature du service</td>
     <td>Formation</td>
+    <td><mat-checkbox color="primary" [indeterminate]="!sameStatusForAll()" [ngModel]="allChecked()" #global (change)="globalChange(global.checked)"></mat-checkbox></td>
   </thead>
-  <tbody *ngFor="let day of days">
+  <tbody *ngFor="let day of calendarMonth.days">
     <tr *ngIf="day.events.length == 0">
       <td class="date">{{day.date | amParse:'YYYY-MM-DD' | amLocale: 'fr' | amDateFormat: 'dddd D' | titlecase}}</td>
-      <td colspan="5" class="empty-day"></td>
+      <td colspan="6" class="empty-day"></td>
     </tr>
     <tr *ngFor="let event of day.events; let isFirstRow=first">
       <td *ngIf="isFirstRow" [attr.rowspan]="day.events.length" class="date">{{day.date | amParse:'YYYY-MM-DD' | amLocale: 'fr' | amDateFormat: 'dddd D' | titlecase}}</td>
@@ -19,6 +20,7 @@
       <td>{{event.location}}</td>
       <td>{{event.title}}</td>
       <td>{{event.group}}</td>
+      <td><mat-checkbox color="primary" [(ngModel)]="event.enabled" (ngModelChange)="save()"></mat-checkbox></td>
     </tr>
   </tbody>
 </table>

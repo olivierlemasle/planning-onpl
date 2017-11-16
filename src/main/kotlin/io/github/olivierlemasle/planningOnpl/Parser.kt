@@ -1,5 +1,6 @@
 package io.github.olivierlemasle.planningOnpl
 
+import com.google.common.annotations.VisibleForTesting
 import org.apache.pdfbox.pdmodel.PDDocument
 import org.apache.pdfbox.text.PDFTextStripper
 import org.apache.pdfbox.text.PDFTextStripperByArea
@@ -15,21 +16,24 @@ import java.util.*
 import java.util.logging.Level
 import java.util.logging.Logger
 
+
 class Parser(bytes: ByteArray) {
-    private val document: PDDocument
+    private val document: PDDocument = PDDocument.load(bytes)
 
-    init {
-        Logger.getLogger("org.apache.pdfbox").level = Level.SEVERE
+    companion object {
+        init {
+            Logger.getLogger("org.apache.pdfbox").level = Level.SEVERE
+        }
 
-        document = PDDocument.load(bytes)
+        // Janvier|Février|...
+        private val months = Month.values()
+                .joinToString(separator = "|") {
+                    it.getDisplayName(TextStyle.FULL, Locale.FRANCE)
+                }
     }
 
-    private val months = Month.values()
-            .joinToString(separator = "|") {
-                it.getDisplayName(TextStyle.FULL, Locale.FRANCE)
-            }
 
-
+    @VisibleForTesting
     fun getLines(): List<String> {
         val stripper = PDFTextStripper()
         stripper.sortByPosition = true
@@ -37,18 +41,24 @@ class Parser(bytes: ByteArray) {
     }
 
     private fun getLocationWords(): Set<String> {
-        val locationRegion = FindRegion(leftWord = "Lieu", rightWord = "Nature").getRegion(document)
+        val locationRegion = FindRegionTextStripper(leftWord = "Lieu", rightWord = "Nature").getRegion(document)
 
+        val regionName = "location"
         val stripper = PDFTextStripperByArea()
         stripper.sortByPosition = true
-        stripper.addRegion("location", locationRegion)
+        stripper.addRegion(regionName, locationRegion)
         stripper.extractRegions(document.getPage(0))
-        val lines = stripper.getTextForRegion("location").lines()
+
+        // Get text in delimited region
+        val lines = stripper.getTextForRegion(regionName).lines()
+
+        // Remove lines before the header, the header itself and blank lines
         return lines.subList(fromIndex = lines.indexOfFirst { it.contains("Lieu") } + 1, toIndex = lines.size)
                 .filterNot { it.isBlank() }
                 .toSet()
     }
 
+    @VisibleForTesting
     fun extractMonth(lines: Collection<String>): LocalDate? {
         val monthRegex = Regex("""($months)\s*(\d{4})""")
         val monthLine = lines.firstOrNull { it.contains(monthRegex) }
@@ -121,15 +131,17 @@ class Parser(bytes: ByteArray) {
         val unDelimitedEventRegex = Regex("""^(\d{1,2}h\d{2})\s(.*)""")
         return when {
             delimitedEventRegex.containsMatchIn(line) -> {
-                val (_, start, end, remaining) = delimitedEventRegex.find(line)!!.groupValues
-                val (location, summary, group) = parseLine(remaining, locationWords)
-                Event(start = start.toTime(), end = end.toTime(), location = location, title = summary, group = group)
+                val (_, startString, endString, remaining) = delimitedEventRegex.find(line)!!.groupValues
+                val start = startString.toTime()
+                val end = endString.toTime()
+                val (location, summary, group, bus) = parseLine(remaining, locationWords)
+                Event(start = start, end = end, location = location, title = summary, group = group)
             }
             unDelimitedEventRegex.containsMatchIn(line) -> {
                 val (_, startString, remaining) = unDelimitedEventRegex.find(line)!!.groupValues
                 val start = startString.toTime()
                 val end = start.plusHours(2)
-                val (location, summary, group) = parseLine(remaining, locationWords)
+                val (location, summary, group, bus) = parseLine(remaining, locationWords)
                 Event(start = start, end = end, location = location, title = summary, group = group)
             }
             else -> null
@@ -139,22 +151,23 @@ class Parser(bytes: ByteArray) {
     private fun String.toTime(): LocalTime = LocalTime.parse(this, DateTimeFormatter.ofPattern("HH'h'mm"))
 
     private fun parseLine(line: String, locationWords: Set<String>): Elements {
-        val matchResult = Regex("""((GF|FN|FA)(\d{1,2}))?\s*([0-9,]*)\s*(\d{1,2}[h:]\d{2})?$""").find(line)
+        // Example suffix: GF2 2,5 10h30
+        val matchResult = Regex("""((GF|FN|FA)(\d{1,2})(bis)?)?\s*([0-9,]*)\s*(\d{1,2}[h:]\d{2})?$""").find(line)
         if (matchResult != null) {
-            val (lastPart, group) = matchResult.groupValues
-            val firstPart = line.replace(lastPart, "").trim()
-            val location = locationWords.firstOrNull { firstPart.contains(it) }?.trim()
-            return if (location != null) Elements(location = location, summary = firstPart.replace(location, ""), group = group)
-            else Elements(location = "", summary = firstPart, group = group)
+            val (suffix, group, _, bus) = matchResult.groupValues
+            val locationAndNature = line.replace(suffix, "").trim()
+            val location = locationWords.firstOrNull { locationAndNature.contains(it) }?.trim()
+            val nature = if (location != null) locationAndNature.replace(location, "") else locationAndNature
+            return Elements(location = location ?: "", summary = nature, group = group, bus = bus)
         } else throw Exception("Invalid input")
     }
 }
 
 private class Day(val date: LocalDate, val formatted: String, val events: MutableList<Event> = mutableListOf())
 
-private data class Elements(val location: String, val summary: String, val group: String)
+private data class Elements(val location: String, val summary: String, val group: String, val bus: String)
 
-private class FindRegion(val leftWord: String, val rightWord: String) : PDFTextStripper() {
+private class FindRegionTextStripper(val leftWord: String, val rightWord: String) : PDFTextStripper() {
     init {
         this.sortByPosition = true
     }
