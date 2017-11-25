@@ -1,9 +1,10 @@
 import { Component, OnInit, AfterViewInit, ViewChild, ChangeDetectorRef} from '@angular/core';
 import { HttpClient, HttpRequest, HttpResponse, HttpEventType, HttpErrorResponse } from '@angular/common/http';
-import { FormBuilder, FormGroup, Validators, FormControl} from '@angular/forms';
+import { FormBuilder, FormGroup, Validators, FormControl, ValidationErrors} from '@angular/forms';
 import { DomSanitizer } from '@angular/platform-browser';
 import { MatStepper, ErrorStateMatcher, MatSnackBar, MatIconRegistry } from '@angular/material';
 import { StepperSelectionEvent } from '@angular/cdk/stepper';
+import { Subject } from 'rxjs/Subject';
 
 import { CalendarMonth } from './calendar-month';
 import { UserInfo } from './user-info';
@@ -11,6 +12,7 @@ import { FileInput } from './file-input/file-input';
 import { BooleanResult } from './boolean-result';
 import { CalendarDay } from './calendar-day';
 import { Event } from './event';
+import { monthInputValidator } from './month-input-validator';
 
 @Component({
   selector: 'app-root',
@@ -28,12 +30,13 @@ export class AppComponent implements OnInit, AfterViewInit {
   isBusy = false;
   mode = 'determinate';
   progress = 0;
+  successObserver = new Subject<boolean>();
   importFormGroup: FormGroup;
   @ViewChild(MatStepper) stepper: MatStepper;
 
   ngOnInit() {
     this.importFormGroup = this.formBuilder.group({
-      pdfFile: ['', [Validators.required]]
+      pdfFile: ['', [Validators.required], [monthInputValidator(this.successObserver)]]
     });
     this.http.get('/api/user').subscribe((data: UserInfo) => {
       this.userInfo = data;
@@ -90,6 +93,7 @@ export class AppComponent implements OnInit, AfterViewInit {
           }
         } else if (event instanceof HttpResponse) {
           this.isBusy = false;
+          this.successObserver.next(true);
           if (event.status === 200) {
             const resp = event.body as CalendarMonth;
             if (resp && resp.month) {
@@ -100,7 +104,7 @@ export class AppComponent implements OnInit, AfterViewInit {
                 });
               });
               this.snackBar.open('Le planning a été correctement importé.', null, {
-                duration: 3000,
+                duration: 5000,
               });
             }
           }
@@ -108,6 +112,7 @@ export class AppComponent implements OnInit, AfterViewInit {
       },
       (error: HttpErrorResponse) => {
         this.isBusy = false;
+        this.successObserver.next(false);
         let message: string;
         if (error.status === 400) {
           message = 'Le fichier importé n\' semble ne pas être un planning valide.';
@@ -115,9 +120,8 @@ export class AppComponent implements OnInit, AfterViewInit {
           message = 'Une erreur est survenue.';
         }
         this.snackBar.open(message, null, {
-          duration: 3000,
+          duration: 5000,
         });
-        this.importFormGroup.controls['pdfFile'].setValue(null);
       }
     );
   }

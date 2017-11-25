@@ -1,12 +1,22 @@
 <mat-toolbar color="primary" class="mat-elevation-z4" class="header">
   <h1>Planning de l'ONPL</h1>
-  <a mat-button href="https://github.com/olivierlemasle/planning-onpl" target="_blank">
-    <mat-icon matTooltip="Voir le code sur GitHub" svgIcon="github"></mat-icon>
-  </a>
+  <button mat-icon-button [matMenuTriggerFor]="menu">
+    <mat-icon matTooltip="Informations">info</mat-icon>
+  </button>
+  <mat-menu #menu="matMenu" yPosition="below" [overlapTrigger]="false">
+    <a mat-menu-item href="https://github.com/olivierlemasle/planning-onpl" target="_blank">
+      <mat-icon svgIcon="github"></mat-icon>
+      <span>Projet GitHub</span>
+    </a>
+    <a mat-menu-item href="https://github.com/olivierlemasle/planning-onpl/issues" target="_blank">
+      <mat-icon>bug_report</mat-icon>
+      <span>Signaler un bug</span>
+    </a>
+  </mat-menu>
   <span class="fill-remaining-space"></span>
   <div *ngIf="userInfo.userId; else login">
     <span>{{userInfo.nickName}}</span>
-    <a mat-button [href]="userInfo.logoutUrl">
+    <a mat-icon-button [href]="userInfo.logoutUrl">
       <mat-icon matTooltip="Déconnexion">exit_to_app</mat-icon>
     </a>
   </div>
@@ -24,16 +34,20 @@
 
     <mat-step label="Importer" [stepControl]="importFormGroup">
       <form [formGroup]="importFormGroup">
+        <h3>Importer un planning mensuel (au format PDF) :</h3>
         <mat-form-field>
           <app-file-input placeholder="Planning mensuel" required formControlName="pdfFile" #fileInput (change)="upload(fileInput.value)"></app-file-input>
           <mat-error *ngIf="importFormGroup.get('pdfFile').hasError('required')">
             Merci de sélectionner un fichier PDF
           </mat-error>
+          <mat-error *ngIf="importFormGroup.get('pdfFile').hasError('invalidFile')">
+            Fichier invalide
+          </mat-error>
           <mat-icon matSuffix>file_upload</mat-icon>
         </mat-form-field>
         <mat-progress-bar *ngIf="isBusy" [mode]="mode" [value]="progress"></mat-progress-bar>
         <div>
-          <button mat-button matStepperNext class="next">Suivant</button>
+          <button mat-button matStepperNext class="next" [disabled]="importFormGroup.invalid || importFormGroup.pending">Suivant</button>
         </div>
       </form>
     </mat-step>
@@ -52,7 +66,7 @@
         <app-google-calendar [calendarMonth]="calendarMonth"></app-google-calendar>
       </div>
       <ng-template #noUser>
-        <p>Vous n'êtes pas connecté. Se connecter permet d'exporter l'agenda dans Google Calendar.</p>
+        <p>Vous n'êtes pas connecté. Il est nécessaire de se connecter avant d'exporter l'agenda dans Google Calendar.</p>
         <a mat-raised-button color="primary" [href]="userInfo.loginUrl">Se connecter</a>
       </ng-template>
       <div>

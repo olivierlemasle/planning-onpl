@@ -18,6 +18,9 @@ export class CalendarChooserComponent implements OnInit {
   ngOnInit() {
     this.googleCalendarService.getCalendars().subscribe(data => {
       this.calendars = data;
+      if (data.length === 1) {
+        this.selectedCalendar = this.calendars[0];
+      }
     });
   }
 
