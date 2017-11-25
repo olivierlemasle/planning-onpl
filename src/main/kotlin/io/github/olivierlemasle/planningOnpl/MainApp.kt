@@ -18,6 +18,7 @@ import java.time.LocalTime
 import java.time.ZoneId
 import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
+import java.util.logging.Level
 import java.util.logging.Logger
 
 class MainApp : SparkApplication {
@@ -138,26 +139,30 @@ class MainApp : SparkApplication {
                 val startMonth = ZonedDateTime.of(month.month, LocalTime.MIN, zone)
                 val min = startMonth.format(DateTimeFormatter.ISO_OFFSET_DATE_TIME)
                 val max = startMonth.plusMonths(1).format(DateTimeFormatter.ISO_OFFSET_DATE_TIME)
-                calendarApi.events()
-                        .list(calendarId)
-                        .setSharedExtendedProperty(listOf("onpl=true"))
-                        .setTimeMin(DateTime(min))
-                        .setTimeMax(DateTime(max))
-                        .execute()
-                        .items
-                        .forEach { event ->
-                            calendarApi.events()
-                                    .delete(calendarId, event.id)
-                                    .queue(batchRequest, object : JsonBatchCallback<Void>() {
-                                        override fun onSuccess(e: Void?, responseHeaders: HttpHeaders?) {
-                                            nDeleted++
-                                        }
+                var pageToken: String? = null
+                do {
+                    val events = calendarApi.events()
+                            .list(calendarId)
+                            .setSharedExtendedProperty(listOf("onpl=true"))
+                            .setTimeMin(DateTime(min))
+                            .setTimeMax(DateTime(max))
+                            .setPageToken(pageToken)
+                            .execute()
+                    events.items.forEach { event ->
+                        calendarApi.events()
+                                .delete(calendarId, event.id)
+                                .queue(batchRequest, object : JsonBatchCallback<Void>() {
+                                    override fun onSuccess(e: Void?, responseHeaders: HttpHeaders?) {
+                                        nDeleted++
+                                    }
 
-                                        override fun onFailure(e: GoogleJsonError, responseHeaders: HttpHeaders?) {
-                                            println(e.toString())
-                                        }
-                                    })
-                        }
+                                    override fun onFailure(e: GoogleJsonError, responseHeaders: HttpHeaders?) {
+                                        logger.log(Level.SEVERE, "Failure deleting event", e)
+                                    }
+                                })
+                    }
+                    pageToken = events.nextPageToken
+                } while (pageToken != null)
                 if (batchRequest.size() > 0)
                     batchRequest.execute()
                 println("$nDeleted events deleted")
@@ -184,20 +189,22 @@ class MainApp : SparkApplication {
                                     }
 
                                     override fun onFailure(e: GoogleJsonError, responseHeaders: HttpHeaders?) {
-                                        println(e.toString())
+                                        logger.log(Level.SEVERE, "Failure adding event", e)
                                     }
                                 })
                     }
                 }
 
-                batchRequest.execute()
+                if (batchRequest.size() > 0)
+                    batchRequest.execute()
                 println("$nAdded events added")
                 response.type("application/json")
-                true.toWrappedJson()
+                gson.toJson(SynchResult(added = nAdded, removed = nDeleted))
             } catch (e: Exception) {
-                e.printStackTrace()
+                logger.log(Level.SEVERE, "Exception during synch", e)
                 response.type("application/json")
-                false.toWrappedJson()
+                response.status(400)
+                gson.toJson(SynchResult(added = 0, removed = 0))
             }
         }
 

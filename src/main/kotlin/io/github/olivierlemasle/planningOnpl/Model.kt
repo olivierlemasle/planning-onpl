@@ -20,3 +20,5 @@ data class UserInfo(val userId: String? = null, val nickName: String? = null,
                     val loginUrl: String? = null, val logoutUrl: String? = null) : Serializable
 
 data class BooleanResult(val result: Boolean) : Serializable
+
+data class SynchResult(val removed: Int, val added: Int)
