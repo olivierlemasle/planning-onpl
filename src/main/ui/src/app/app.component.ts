@@ -1,7 +1,8 @@
 import { Component, OnInit, AfterViewInit, ViewChild, ChangeDetectorRef} from '@angular/core';
 import { HttpClient, HttpRequest, HttpResponse, HttpEventType, HttpErrorResponse } from '@angular/common/http';
 import { FormBuilder, FormGroup, Validators, FormControl} from '@angular/forms';
-import { MatStepper, ErrorStateMatcher, MatSnackBar } from '@angular/material';
+import { DomSanitizer } from '@angular/platform-browser';
+import { MatStepper, ErrorStateMatcher, MatSnackBar, MatIconRegistry } from '@angular/material';
 import { StepperSelectionEvent } from '@angular/cdk/stepper';
 
 import { CalendarMonth } from './calendar-month';
@@ -17,7 +18,10 @@ import { Event } from './event';
   styleUrls: ['./app.component.css']
 })
 export class AppComponent implements OnInit, AfterViewInit {
-  constructor(private http: HttpClient, private formBuilder: FormBuilder, private cd: ChangeDetectorRef, public snackBar: MatSnackBar) {}
+  constructor(private http: HttpClient, private formBuilder: FormBuilder, private cd: ChangeDetectorRef,
+    public snackBar: MatSnackBar, iconRegistry: MatIconRegistry, sanitizer: DomSanitizer) {
+      iconRegistry.addSvgIcon('github', sanitizer.bypassSecurityTrustResourceUrl('/assets/img/github.svg'));
+    }
 
   calendarMonth: CalendarMonth = new CalendarMonth();
   userInfo: UserInfo = new UserInfo();
@@ -94,6 +98,9 @@ export class AppComponent implements OnInit, AfterViewInit {
                 day.events.forEach((e: Event) => {
                   e.enabled = true;
                 });
+              });
+              this.snackBar.open('Le planning a été correctement importé.', null, {
+                duration: 3000,
               });
             }
           }

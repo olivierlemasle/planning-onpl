@@ -1,10 +1,13 @@
 <mat-toolbar color="primary" class="mat-elevation-z4" class="header">
   <h1>Planning de l'ONPL</h1>
+  <a mat-button href="https://github.com/olivierlemasle/planning-onpl" target="_blank">
+    <mat-icon matTooltip="Voir le code sur GitHub" svgIcon="github"></mat-icon>
+  </a>
   <span class="fill-remaining-space"></span>
   <div *ngIf="userInfo.userId; else login">
     <span>{{userInfo.nickName}}</span>
     <a mat-button [href]="userInfo.logoutUrl">
-      <mat-icon class="icon" matTooltip="Déconnexion">exit_to_app</mat-icon>
+      <mat-icon matTooltip="Déconnexion">exit_to_app</mat-icon>
     </a>
   </div>
   <ng-template #login>
