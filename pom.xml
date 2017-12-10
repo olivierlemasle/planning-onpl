@@ -45,7 +45,7 @@
         <dependency>
             <groupId>com.google.apis</groupId>
             <artifactId>google-api-services-calendar</artifactId>
-            <version>v3-rev271-1.23.0</version>
+            <version>v3-rev273-1.23.0</version>
         </dependency>
         <dependency>
             <groupId>org.apache.pdfbox</groupId>
