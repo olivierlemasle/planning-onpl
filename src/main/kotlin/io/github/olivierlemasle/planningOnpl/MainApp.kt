@@ -169,14 +169,21 @@ class MainApp : SparkApplication {
 
                 month.days.forEach { day ->
                     day.events.map {
-                        val start = ZonedDateTime.of(day.date, it.start, zone).format(DateTimeFormatter.ISO_OFFSET_DATE_TIME)
-                        val end = ZonedDateTime.of(day.date, it.end, zone).format(DateTimeFormatter.ISO_OFFSET_DATE_TIME)
+                        val start = ZonedDateTime.of(day.date, it.start, zone)
+                        var end = ZonedDateTime.of(day.date, it.end, zone)
+
+                        if (end.isBefore(start)) {
+                            end = end.plusDays(1)
+                        }
+
+                        val startString = start.format(DateTimeFormatter.ISO_OFFSET_DATE_TIME)
+                        val endString = end.format(DateTimeFormatter.ISO_OFFSET_DATE_TIME)
 
                         com.google.api.services.calendar.model.Event()
                                 .setSummary("${it.title} - ${it.group}")
                                 .setLocation(it.location)
-                                .setStart(EventDateTime().setDateTime(DateTime(start)).setTimeZone("Europe/Paris"))
-                                .setEnd(EventDateTime().setDateTime(DateTime(end)).setTimeZone("Europe/Paris"))
+                                .setStart(EventDateTime().setDateTime(DateTime(startString)).setTimeZone("Europe/Paris"))
+                                .setEnd(EventDateTime().setDateTime(DateTime(endString)).setTimeZone("Europe/Paris"))
                                 .setExtendedProperties(ExtendedProperties()
                                         .setShared(mapOf("onpl" to "true"))
                                 )
