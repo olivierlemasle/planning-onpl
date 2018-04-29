@@ -87,24 +87,31 @@ class Parser(bytes: ByteArray) {
                 .map {
                     val day = month.withDayOfMonth(it)
 
-                    // Example: '^\s*mercredi\s*5', matching 'Mercredi  5'
-                    val formatted = day.format(DateTimeFormatter.ofPattern("'^\\s*'cccc'\\s*'d", Locale.FRANCE))
+                    // Example: '^\s*mercredi\s*(5)?', matching 'Mercredi  5'
+                    val formatted = day.format(DateTimeFormatter.ofPattern("'^\\s*'cccc'\\s*'(d)?", Locale.FRANCE))
                     Day(date = day, formatted = formatted)
                 }
 
         var i = 0
         var day: Day? = null
         var strippedLine: String
+        var missingDayNumber = false
         for (line in lines) {
-            if (i < daysInMonth && line.contains(Regex(pattern = days[i].formatted, option = RegexOption.IGNORE_CASE))) {
+            if (i >= daysInMonth || line.contains("Le présent planning")) {
+                break
+            }
+            val regex = Regex(pattern = days[i].formatted, option = RegexOption.IGNORE_CASE)
+            val regex2 = Regex("^\\s*$i")
+            if (i < daysInMonth && line.contains(regex)) {
+                missingDayNumber = regex.find(line)?.groupValues?.get(1).isNullOrEmpty()
                 day = days[i]
-                strippedLine = Regex(pattern = days[i].formatted, option = RegexOption.IGNORE_CASE).replace(line, "").trim()
+                strippedLine = line.replace(regex, "").trim()
                 i++
+            } else if(missingDayNumber && line.contains(regex2)) {
+                strippedLine = line.replace(regex2, "").trim()
+                missingDayNumber = false
             } else {
                 strippedLine = line.trim()
-            }
-            if (line.contains("Le présent planning")) {
-                break
             }
             if (day != null) {
                 val event = createEvent(strippedLine, locationWords)
@@ -152,11 +159,11 @@ class Parser(bytes: ByteArray) {
 
     private fun parseLine(line: String, locationWords: Set<String>): Elements {
         // Example suffix: GF2 2,5 10h30
-        val matchResult = Regex("""((GF|FN|FA)(\d{1,2})(bis)?)?\s*([0-9,]*)\s*(\d{1,2}[h:]\d{2})?$""").find(line)
+        val matchResult = Regex("""(((GF|FN|FA)(\d{1,2})(bis)?)|CI)?\s*([0-9,.]*)\s*(\d{1,2}\s*[h:]\s*\d{2})?$""").find(line)
         if (matchResult != null) {
             val (suffix, group, _, bus) = matchResult.groupValues
             val locationAndNature = line.replace(suffix, "").trim()
-            val location = locationWords.firstOrNull { locationAndNature.contains(it) }?.trim()
+            val location = locationWords.filter { locationAndNature.contains(it) }.maxBy { it.length }?.trim()
             val nature = if (location != null) locationAndNature.replace(location, "") else locationAndNature
             return Elements(location = location ?: "", summary = nature, group = group, bus = bus)
         } else throw Exception("Invalid input")
